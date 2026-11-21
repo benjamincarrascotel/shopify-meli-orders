@@ -6,7 +6,9 @@ can run it. Orders are read and updated only through this module, never in a bro
 import json
 import os
 import re
+import shutil
 import subprocess
+import sys
 import tempfile
 import urllib.request
 from pathlib import Path
@@ -35,13 +37,25 @@ class ShopifyError(Exception):
     pass
 
 
+def cli():
+    """The Shopify CLI as it can be launched: on Windows it is `shopify.cmd`, which only its full path runs."""
+    found = shutil.which("shopify")
+    if not found:
+        raise ShopifyError("the Shopify CLI is not installed")
+    return found
+
+
 def gql(domain, query, variables=None, mutate=False):
-    cmd = ["shopify", "store", "execute", "--store", domain, "--json", "--query", query]
-    if variables is not None:
-        cmd += ["--variables", json.dumps(variables)]
-    if mutate:
-        cmd.append("--allow-mutations")
-    out = subprocess.run(cmd, capture_output=True, text=True).stdout
+    # query and variables travel in files: a command line would mangle their quotes and line breaks on Windows
+    with tempfile.TemporaryDirectory() as folder:
+        Path(folder, "query.graphql").write_text(query, encoding="utf-8")
+        cmd = [cli(), "store", "execute", "--store", domain, "--json", "--query-file", str(Path(folder, "query.graphql"))]
+        if variables is not None:
+            Path(folder, "variables.json").write_text(json.dumps(variables), encoding="utf-8")
+            cmd += ["--variable-file", str(Path(folder, "variables.json"))]
+        if mutate:
+            cmd.append("--allow-mutations")
+        out = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8").stdout
     body = "\n".join(line for line in out.splitlines() if '"type":"progress"' not in line)
     if "{" not in body:
         raise ShopifyError(f"no answer from the Shopify CLI for {domain}")
@@ -88,27 +102,31 @@ def missing_scopes(domain):
 
 
 def authorize(domain, profile):
-    """Approve the full scope list in the store's isolated Chrome profile, not in the default browser.
+    """Approve the full scope list. The CLI keeps the authorization, so which browser approves does not matter later.
 
-    The CLI has no headless mode and opens the page with `open <url>`; a shim named `open` earlier
-    in PATH sends that URL to the isolated profile instead. macOS only for now.
+    The CLI has no headless mode and opens the approval page itself. On macOS it does so with
+    `open <url>`, and a shim named `open` earlier in PATH sends that URL to the store's isolated
+    Chrome profile. On Windows and Linux the page opens in the user's default browser (not exercised).
     """
-    profile.mkdir(parents=True, exist_ok=True)
     try:
         # never narrow what the store already grants: other tools on this computer share the CLI's authorization
         scopes = sorted(set(SCOPES) | granted_scopes(domain))
     except (ShopifyError, ValueError):
         scopes = SCOPES
-    with tempfile.TemporaryDirectory() as shim:
-        script = Path(shim, "open")
-        # the two keychain flags are the ones Playwright saves this profile's cookies with
-        script.write_text('#!/bin/sh\nfor url; do :; done\n'
-                          f'"{browser.chrome_path()}" --user-data-dir="{profile}" '
-                          '--use-mock-keychain --password-store=basic "$url" >/dev/null 2>&1 &\n')
-        script.chmod(0o755)
-        env = {**os.environ, "PATH": f"{shim}{os.pathsep}{os.environ['PATH']}"}
-        done = subprocess.run(["shopify", "store", "auth", "--store", domain, "--scopes", ",".join(scopes)], env=env)
-    browser.close_profile(profile)  # free the profile for the next automated run
+    cmd = [cli(), "store", "auth", "--store", domain, "--scopes", ",".join(scopes)]
+    if sys.platform != "darwin":
+        done = subprocess.run(cmd)
+    else:
+        profile.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as shim:
+            script = Path(shim, "open")
+            # the two keychain flags are the ones Playwright saves this profile's cookies with
+            script.write_text('#!/bin/sh\nfor url; do :; done\n'
+                              f'"{browser.chrome_path()}" --user-data-dir="{profile}" '
+                              '--use-mock-keychain --password-store=basic "$url" >/dev/null 2>&1 &\n')
+            script.chmod(0o755)
+            done = subprocess.run(cmd, env={**os.environ, "PATH": f"{shim}{os.pathsep}{os.environ['PATH']}"})
+        browser.close_profile(profile)  # free the profile for the next automated run
     if done.returncode:
         raise ShopifyError("the Shopify authorization did not complete")
 

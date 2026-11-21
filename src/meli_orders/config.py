@@ -41,7 +41,7 @@ def now():
 
 
 def _validate(kind, data, path):
-    schema = json.loads((PACKAGE / "schemas" / f"{kind}.schema.json").read_text())
+    schema = json.loads((PACKAGE / "schemas" / f"{kind}.schema.json").read_text(encoding="utf-8"))
     errors = sorted(Draft202012Validator(schema).iter_errors(data), key=lambda e: list(e.path))
     if errors:
         where = "/".join(map(str, errors[0].path)) or "(root)"
@@ -51,7 +51,7 @@ def _validate(kind, data, path):
 def _load(kind, path):
     if not path.exists():
         raise ConfigError(f"{path} does not exist")
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     _validate(kind, data, path)
     return data
 
@@ -62,7 +62,7 @@ def _save(kind, path, data):
     _validate(kind, data, path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")  # write-then-rename: a crash never leaves half a file
-    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     tmp.replace(path)
     return data
 

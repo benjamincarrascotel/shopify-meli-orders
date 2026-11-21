@@ -34,11 +34,12 @@ def cmd_doctor(args):
         show(results)
     else:
         for r in results:
-            print(f"{'✓' if r['ok'] else '✗'} {r['check']}" + (f"  ({r['detail']})" if r["detail"] else ""))
+            mark = "✓" if r["ok"] else "!" if r["warning"] else "✗"
+            print(f"{mark} {r['check']}" + (f"  ({r['detail']})" if r["detail"] else ""))
             if r["fix"]:
                 print(f"    → {r['fix']}")
-        print(t("doctor.ok") if all(r["ok"] for r in results) else t("doctor.failed"))
-    return 0 if all(r["ok"] for r in results) else 1
+        print(t("doctor.ok") if doctor.passed(results) else t("doctor.failed"))
+    return 0 if doctor.passed(results) else 1
 
 
 def cmd_settings(args):
@@ -54,7 +55,7 @@ def cmd_store_add(args):
     except shopify.ShopifyError:
         authorized = False
     if not authorized:  # no browser at all when the store already grants everything
-        print(t("store.authorizing"), flush=True)
+        print(t("store.authorizing" if sys.platform == "darwin" else "store.authorizing_default"), flush=True)
         shopify.authorize(domain, config.profile_dir(args.store))
     info = shopify.shop(domain)
     existing = config.store(args.store) if args.store in config.stores() else {}
@@ -298,6 +299,8 @@ def build():
 
 
 def main(argv=None):
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8")  # the texts have ✓, « and accents; Windows consoles default to another code page
     args = build().parse_args(argv)
     try:
         code = args.func(args)

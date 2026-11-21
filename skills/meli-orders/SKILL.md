@@ -10,6 +10,7 @@ description: >-
 # meli-orders
 
 Run every command as `uv run meli-orders ...` from the repository root. Follow [AGENTS.md](../../AGENTS.md).
+If `uv` or the command is missing, the repository is not installed yet: start with [setup](../setup/SKILL.md).
 
 ## 1. Language first
 
@@ -19,16 +20,18 @@ From then on speak to the user in that language. Never guess it from the convers
 
 ## 2. See where things stand
 
-Run `uv run meli-orders doctor --json`. Each item is `{check, ok, detail, fix}`.
+Run `uv run meli-orders doctor --json`. Each item is `{check, ok, warning, detail, fix}`; an item fails
+when `ok` is false and `warning` is false.
 
 | What fails | Go to |
 |---|---|
-| `google-chrome`, `uv`, `git`, `shopify`, `language`, `local-folder-ignored-by-git` | [setup](../setup/SKILL.md) |
+| `google-chrome`, `shopify`, `language`, `local-folder-ignored-by-git` | [setup](../setup/SKILL.md) |
 | `stores`, or a store's `shopify access` or `mercado libre account` | [store-connect](../store-connect/SKILL.md) |
 | a store's `products` | [product-config](../product-config/SKILL.md) |
 | nothing | what the user asked for, below |
 
-A failed `site validated` is a warning, not a blocker: tell the user that site has never been run.
+`system validated` and `site validated` only warn: tell the user that this system, or that Mercado Libre
+site, has never been run end to end, and go on.
 
 ## 3. Do what was asked
 

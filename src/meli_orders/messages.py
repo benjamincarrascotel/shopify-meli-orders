@@ -7,7 +7,7 @@ from . import config
 
 @lru_cache
 def catalog(lang):
-    return json.loads((config.PACKAGE / "locales" / f"{lang}.json").read_text())
+    return json.loads((config.PACKAGE / "locales" / f"{lang}.json").read_text(encoding="utf-8"))
 
 
 def t(key, **values):

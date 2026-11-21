@@ -182,19 +182,20 @@ def test_both_languages_have_the_same_texts():
 
 
 def test_every_reason_and_fix_used_in_the_code_has_a_text():
-    source = "".join(p.read_text() for p in (ROOT / "src/meli_orders").rglob("*.py"))
+    source = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "src/meli_orders").rglob("*.py"))
     used = set(re.findall(r'(?:Stop|OrderProblem|ListingProblem|_stopped\(order,)\s*\(?"(\w+)"', source))
     used |= set(re.findall(r'"reason": "(\w+)"', source))
     missing = {f"reason.{code}" for code in used} - messages.catalog("en").keys()
     assert used and not missing, missing
-    fixes = set(re.findall(r'add\([^\n]*?, "(\w+)"(?:, store=slug)?\)', (ROOT / "src/meli_orders/doctor.py").read_text()))
-    assert fixes and not {f"fix.{f}" for f in fixes} - messages.catalog("en").keys()
+    fixes = set(re.findall(r'add\([^\n]*?, "(\w+)"(?:, \w+=\w+)*\)', (ROOT / "src/meli_orders/doctor.py").read_text(encoding="utf-8")))
+    fixes |= {f"{tool}_{system}" for tool in ("chrome", "shopify") for system in ("darwin", "win32", "linux")}
+    assert len(fixes) > 6 and not {f"fix.{f}" for f in fixes} - messages.catalog("en").keys()
 
 
 def test_schemas_are_valid_json_schema():
     from jsonschema import Draft202012Validator
     for path in (ROOT / "src/meli_orders/schemas").glob("*.json"):
-        Draft202012Validator.check_schema(json.loads(path.read_text()))
+        Draft202012Validator.check_schema(json.loads(path.read_text(encoding="utf-8")))
 
 
 def test_nothing_under_local_is_tracked_by_git():

@@ -9,25 +9,69 @@ Shopify sessions, and your everyday Chrome profiles are never touched. Orders ar
 the Shopify CLI, never in the browser.
 
 > You are responsible for how you use this with your Mercado Libre account and for complying with its terms.
-> Only Mercado Libre Chile on macOS has been run end to end. See [What has not been validated](#what-has-not-been-validated).
 
-## Requirements
+**Using an AI agent?** Give it this repository and say "install this and set it up". It reads
+[`AGENTS.md`](AGENTS.md), installs what is missing for your system, and interviews you. You do not need to
+read the rest of this page.
 
-- macOS, [Google Chrome](https://www.google.com/chrome/), [uv](https://docs.astral.sh/uv/), git
-- [Shopify CLI](https://shopify.dev/docs/api/shopify-cli) and a Shopify store you own
-- A Mercado Libre account with Mercado Pago balance: purchases are paid only with that balance
+## What you need
 
-`meli-orders doctor` checks all of it and says how to fix what is missing.
+These are strict. Nothing works without them, and `meli-orders doctor` checks them.
 
-## Quick start
+| | Requirement | Why |
+|---|---|---|
+| 1 | macOS, Windows or Linux with a desktop | The purchase happens in a visible Chrome window |
+| 2 | [Google Chrome](https://www.google.com/chrome/) (Chromium is not enough) | It is the browser the tool drives |
+| 3 | [Shopify CLI](https://shopify.dev/docs/api/shopify-cli) with the `shopify store auth` and `shopify store execute` commands (run with 4.9.4) | Orders are read, tagged and fulfilled through it |
+| 4 | A Shopify store where you can approve app access (owner or staff with that permission) | One approval, the first time |
+| 5 | A Mercado Libre account you can log in to, with **Mercado Pago balance** | Purchases are paid only with that balance. No card, no other method |
+| 6 | Python 3.11 to 3.13, which [uv](https://docs.astral.sh/uv/) installs for you | The tool is a Python program |
+
+What the tool assumes:
+
+- **The balance covers the purchases.** A run compares it with everything pending and stops if it is short.
+- **One product per order.** An order may have several units of one configured product; an order that mixes
+  products is left for you.
+- **The listing sells the same product you sell.** You choose the listings; the tool checks seller and
+  variation on every purchase, not the product itself.
+- **You approve the first purchase of each product** with its real price, shipping and total. After it you
+  choose: automatic, or ask every time. There is no price or shipping cap; the only spending limit is an
+  optional daily cap per store.
+- **Orders ship without a tracking number.** The order is fulfilled when Mercado Libre confirms the purchase.
+- git is not needed: a downloaded zip works the same.
+
+## Install
+
+1. **Get the code.** `git clone https://github.com/benjamincarrascotel/shopify-meli-orders`, or download
+   [the zip](https://github.com/benjamincarrascotel/shopify-meli-orders/archive/refs/heads/dev.zip) and unpack it.
+2. **Install uv, Google Chrome and the Shopify CLI** for your system:
+
+   | | macOS | Windows (PowerShell) | Linux |
+   |---|---|---|---|
+   | uv | `brew install uv` | `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 \| iex"` | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+   | Google Chrome | `brew install --cask google-chrome` | `winget install -e --id Google.Chrome` | the `.deb` or `.rpm` from [google.com/chrome](https://www.google.com/chrome/) |
+   | Shopify CLI | `brew tap shopify/shopify && brew install shopify-cli` | `winget install -e --id OpenJS.NodeJS.LTS`, then `npm install -g @shopify/cli@latest` | Node.js LTS, then `npm install -g @shopify/cli@latest` |
+
+   On macOS without Homebrew, the Linux commands for uv and the Shopify CLI work too.
+3. **Install the tool and check.** In the repository folder:
+
+   ```bash
+   uv sync
+   uv run meli-orders doctor
+   ```
+
+   `doctor` lists what is missing with the install command for your system. Run it until nothing is marked ✗.
+
+Without uv: with Python 3.11 to 3.13, `python -m venv .venv`, activate it, `pip install -e .` (the `-e`
+matters: the configuration lives next to the code), and use `meli-orders ...` wherever this page says
+`uv run meli-orders ...`.
+
+## Set up and run
 
 ```bash
-git clone https://github.com/benjamincarrascotel/shopify-meli-orders && cd shopify-meli-orders
-uv sync
 uv run meli-orders settings es                                   # or en: the language you are addressed in
-uv run meli-orders doctor
-uv run meli-orders store add mystore mystore.com                 # approve the access in the store's browser
-uv run meli-orders store login mystore                           # log in to Mercado Libre in that browser
+uv run meli-orders store add mystore mystore.com                 # approve the access to the store, once
+uv run meli-orders store login mystore                           # log in to Mercado Libre in the store's browser
 uv run meli-orders product list mystore                          # pick what is bought on Mercado Libre
 uv run meli-orders product search mystore "cat scratcher arch"   # candidates
 uv run meli-orders product init mystore scratcher --shopify-product 123 \
@@ -38,7 +82,10 @@ uv run meli-orders run mystore                                   # the purchase 
 
 With an AI agent, ask it to "set up meli-orders" or "run today's purchases": the skills in [`skills/`](skills/)
 walk through the same steps, interview you and research the listings. They are plain Markdown, usable by any
-agent that reads [`AGENTS.md`](AGENTS.md); Claude Code can install them as a plugin from this repository.
+agent that reads [`AGENTS.md`](AGENTS.md); Claude Code can also install them as a plugin from this repository.
+
+The Shopify approval opens in the store's isolated browser on macOS and in your default browser on Windows
+and Linux. The Shopify CLI keeps the authorization, so it makes no difference afterwards.
 
 ## What a run does
 
@@ -105,12 +152,26 @@ by hand to set `units_per_item` for packs, reorder listings or pause a product.
 `browser-profile/` holds live sessions of your Mercado Libre and Shopify accounts. Treat the `local/` folder
 like a password: do not copy, zip or share it.
 
-## What has not been validated
+## What has been tested
 
-- Mercado Libre sites other than Chile: the domains are configured, the address form was never exercised.
-- Systems other than macOS: connecting a store relies on macOS's `open`.
+Done for real, on macOS with Mercado Libre Chile:
+
+- Setup from an empty folder by an AI agent following the skills: store, Mercado Libre login, product.
+- A real order of one unit: bought with the Mercado Pago balance, delivered to the customer's address,
+  tagged, noted and fulfilled in Shopify, with the customer's shipping email sent.
+- Two units of one listing: taken to the payment screen and the total read, without paying.
+
+Checked only by the automated tests, which run on macOS, Windows and Linux at every change: the order
+logic, addresses, the review screen's figures, configuration, and the whole run against fakes including the
+order of every write to Shopify. They never open a browser or reach a store.
+
+Not tested yet:
+
+- **Windows and Linux.** The code is written for them and the automated tests pass there, but nobody has run
+  a purchase on them. `doctor` marks the system with `!` as a reminder.
+- **Mercado Libre sites other than Chile.** The domains are configured; the address form was never exercised.
 - Fallback listings and the free-delivery choice: implemented and unit-tested, not yet met in a real purchase.
-- More than 6 units of one listing, and orders that mix products: left for manual review.
+- Three to six units in one purchase. More than six is not automated: the order is left for manual review.
 - Post-purchase tracking: none. The order is fulfilled without a tracking number.
 
 ## Development

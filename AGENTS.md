@@ -3,6 +3,20 @@
 This repository buys paid Shopify orders on Mercado Libre and fulfils them. It moves real money and emails
 real customers, so the rules below are not style preferences.
 
+## Asked to install or set this up
+
+The user will not read documentation: they hand you this repository and expect it working. Do it in this
+order and do not skip ahead.
+
+1. Find out the system (macOS, Windows or Linux) and follow [`skills/setup/SKILL.md`](skills/setup/SKILL.md):
+   it has the install command of each requirement per system.
+2. When `uv run meli-orders doctor` shows no ✗, continue with
+   [`skills/meli-orders/SKILL.md`](skills/meli-orders/SKILL.md), which connects the store and configures
+   the products by interviewing the user.
+
+Tell the user up front what cannot be installed for them: a Mercado Libre account with Mercado Pago balance
+(the only payment method) and a Shopify store they can approve access to.
+
 ## Using it for a user
 
 Start from [`skills/meli-orders/SKILL.md`](skills/meli-orders/SKILL.md). It decides which of the other skills

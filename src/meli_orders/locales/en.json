@@ -8,7 +8,6 @@
   "login.saved": "Session saved: account {account}",
   "error.generic": "Error: {detail}",
   "error.busy": "Another run is using this store's browser. Wait for it to finish.",
-
   "result.purchased": "bought and fulfilled",
   "result.manual": "left for manual review",
   "result.skipped": "skipped",
@@ -16,15 +15,12 @@
   "result.needs_approval": "waiting for your approval",
   "result.unconfirmed": "PAYMENT NOT CONFIRMED, check «Mis compras» before running again",
   "result.dry_run": "reached the payment screen, nothing paid",
-
   "approval.summary": "\nAbout to buy for order {order}:\n  Product:        {product} × {units}\n  Seller:         {seller}\n  Deliver to:     {recipient} · {address}\n  Delivery:       {delivery}\n  Price:          {items} {currency}\n  Shipping:       {shipping} {currency}\n  Total:          {total} {currency}\n  Balance now:    {balance} {currency}\n  Balance after:  {balance_after} {currency}",
   "approval.confirm": "Approve this purchase? [y/N]",
   "approval.how": "To approve: meli-orders run <store> --approve '{order}'  (exit code {code} means an approval is pending)",
   "approval.ask_mode": "From now on, for {product}: [1] buy automatically  [2] ask me before every purchase",
-
   "note.purchased": "Mercado Libre {day}: bought, purchase #{purchase}, total {total} {currency}, account {account}",
   "note.manual": "Mercado Libre {day}: NOT bought, needs manual review. {reason}",
-
   "reason.address_without_number": "The shipping address has no street number.",
   "reason.invalid_phone": "The phone number is not valid: {phone}",
   "reason.incomplete_address": "The shipping address has no name or no city.",
@@ -54,12 +50,7 @@
   "reason.login_not_seen": "No Mercado Libre login was seen.",
   "reason.first_purchase_not_approved": "The first purchase of this product has to be approved before choosing a mode.",
   "reason.store_domain_not_found": "No Shopify store was found at {address}. Use its internal domain instead: in the Shopify admin, Settings → Domains, the entry ending in .myshopify.com. The same code is in the admin's address: admin.shopify.com/store/<code>.",
-
-  "fix.chrome": "Install Google Chrome: https://www.google.com/chrome/",
-  "fix.uv": "Install uv: brew install uv  (or https://docs.astral.sh/uv/)",
-  "fix.git": "Install git: xcode-select --install",
-  "fix.shopify": "Install the Shopify CLI: brew tap shopify/shopify && brew install shopify-cli",
-  "fix.platform": "Only macOS has been run. Connecting a store opens the browser through macOS's `open`.",
+  "fix.platform": "A whole purchase has only been run on macOS. This system is supported but nobody has reported a purchase on it yet: go on, and check the first purchase closely.",
   "fix.local_ignored": "The folder local/ must be ignored by git: restore the line /local/ in .gitignore.",
   "fix.language": "Choose the language: meli-orders settings es  (or en)",
   "fix.config": "Correct the file named above; `meli-orders validate` checks it.",
@@ -67,5 +58,12 @@
   "fix.shopify_auth": "Authorize the store: meli-orders store add {store} <the store's web address>",
   "fix.meli_login": "Log in to Mercado Libre: meli-orders store login {store}",
   "fix.no_products": "Configure a product: meli-orders product init {store} ...",
-  "fix.no_store": "Connect a store: meli-orders store add <store> <the store's web address>"
+  "fix.no_store": "Connect a store: meli-orders store add <store> <the store's web address>",
+  "store.authorizing_default": "Your default browser will open for you to approve the store's access. Log in to Shopify there as the store's owner.",
+  "fix.chrome_darwin": "Install Google Chrome: brew install --cask google-chrome  (or https://www.google.com/chrome/)",
+  "fix.chrome_win32": "Install Google Chrome: winget install -e --id Google.Chrome  (or https://www.google.com/chrome/)",
+  "fix.chrome_linux": "Install Google Chrome (Chromium is not enough) from https://www.google.com/chrome/ . Debian/Ubuntu: wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt install ./google-chrome-stable_current_amd64.deb",
+  "fix.shopify_darwin": "Install the Shopify CLI: brew tap shopify/shopify && brew install shopify-cli  (or, with Node.js: npm install -g @shopify/cli@latest)",
+  "fix.shopify_win32": "Install the Shopify CLI. It needs Node.js: winget install -e --id OpenJS.NodeJS.LTS , then in a new terminal: npm install -g @shopify/cli@latest",
+  "fix.shopify_linux": "Install the Shopify CLI. It needs Node.js (https://nodejs.org , LTS), then: npm install -g @shopify/cli@latest"
 }

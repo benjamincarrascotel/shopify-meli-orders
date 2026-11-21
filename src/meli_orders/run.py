@@ -82,7 +82,7 @@ def _snapshot(page, files, label, html=True):
     try:
         page.screenshot(path=f"{files}-{label}.png", full_page=True, timeout=5000)
         if html:
-            open(f"{files}-{label}.html", "w").write(page.content())
+            open(f"{files}-{label}.html", "w", encoding="utf-8").write(page.content())
     except Exception:
         pass  # a frozen page must not hide why the order stopped
 

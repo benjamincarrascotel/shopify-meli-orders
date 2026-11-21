@@ -1,5 +1,5 @@
 """The store's isolated Chrome: its own profile folder, never the user's everyday Chrome profiles."""
-import fcntl
+import os
 import re
 import shutil
 import subprocess
@@ -8,10 +8,6 @@ from pathlib import Path
 
 from . import config
 
-CHROME_PATHS = [
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    str(Path.home() / "Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
-]
 
 
 class Busy(Exception):
@@ -19,12 +15,31 @@ class Busy(Exception):
 
 
 def chrome_path():
-    found = [p for p in CHROME_PATHS if Path(p).exists()]
-    return found[0] if found else shutil.which("google-chrome") or shutil.which("google-chrome-stable")
+    """Google Chrome's executable, or None. Chromium does not count: Playwright's "chrome" channel wants Chrome."""
+    candidates = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        Path.home() / "Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/opt/google/chrome/chrome",
+        *(Path(os.environ[folder]) / "Google/Chrome/Application/chrome.exe"
+          for folder in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA") if os.environ.get(folder)),
+    ]
+    found = next((str(p) for p in candidates if Path(p).exists()), None)
+    return found or shutil.which("google-chrome") or shutil.which("google-chrome-stable")
 
 
 def close_profile(profile):
+    """macOS and Linux only: used after the Shopify approval, which uses this profile only on macOS."""
     subprocess.run(["pkill", "-f", "--", f"--user-data-dir={profile}"], capture_output=True)
+
+
+def _lock(handle):
+    """Take the store's lock without waiting; OSError when another run holds it. Windows path not exercised."""
+    if os.name == "nt":
+        import msvcrt
+        msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+    else:
+        import fcntl
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
 
 @contextmanager
@@ -36,8 +51,8 @@ def session(slug, timeout_ms=20000):
     profile.mkdir(parents=True, exist_ok=True)
     with (config.store_dir(slug) / ".lock").open("w") as lock:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
+            _lock(lock)
+        except OSError:
             raise Busy(slug)
         with sync_playwright() as playwright:
             context = playwright.chromium.launch_persistent_context(

@@ -12,7 +12,7 @@ def path(slug):
 def append(slug, **entry):
     entry = {"at": config.now(), "day": datetime.now().date().isoformat(), **entry}
     path(slug).parent.mkdir(parents=True, exist_ok=True)
-    with path(slug).open("a") as f:
+    with path(slug).open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     return entry
 
@@ -20,7 +20,7 @@ def append(slug, **entry):
 def entries(slug):
     if not path(slug).exists():
         return []
-    return [json.loads(line) for line in path(slug).read_text().splitlines() if line.strip()]
+    return [json.loads(line) for line in path(slug).read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
 def spent_today(slug):

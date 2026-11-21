@@ -8,8 +8,9 @@ description: >-
 
 # Connect a store
 
-Each store gets its own isolated Chrome profile under `local/stores/<store>/browser-profile/`. Both
-approvals below happen in that window, never in the user's everyday browser.
+Each store gets its own isolated Chrome profile under `local/stores/<store>/browser-profile/`. The
+Mercado Libre login always happens in that window. The Shopify approval happens there on macOS, and in the
+user's default browser on Windows and Linux; say which one before it opens.
 
 ## Ask first
 
