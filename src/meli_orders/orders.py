@@ -72,7 +72,7 @@ def plan(order, products, retry_manual=False):
 
     Returns {"action": "ignore"} for orders that are not ours to touch, {"action": "skip", "reason"}
     for orders waiting on the user, {"action": "manual", "reason"} for orders to flag in Shopify,
-    or {"action": "buy", "product", "units", "cap"}. Orders flagged for manual review are skipped
+    or {"action": "buy", "product", "units"}. Orders flagged for manual review are skipped
     unless retry_manual asks to try them again.
     """
     tags = set(order.get("tags") or [])
@@ -100,14 +100,10 @@ def plan(order, products, retry_manual=False):
         if variant not in per_item:
             return {"action": "manual", "reason": "unknown_variant"}
         units += line["quantity"] * per_item[variant]
-    limits = product["limits"]
-    return {"action": "buy", "product": product, "units": units,
-            "cap": units * limits["max_unit_price"] + limits["max_shipping"]}
+    return {"action": "buy", "product": product, "units": units}
 
 
 def estimate(product, units):
-    """Expected cost from the last verified checkout of the main listing; the cap when never verified."""
+    """Expected cost from the last verified checkout of the main listing; 0 when it was never measured."""
     verified = product["listings"][0]["verified"]
-    if not verified:
-        return units * product["limits"]["max_unit_price"] + product["limits"]["max_shipping"]
-    return units * verified["unit_price"] + verified["shipping"]
+    return units * verified["unit_price"] + verified["shipping"] if verified else 0

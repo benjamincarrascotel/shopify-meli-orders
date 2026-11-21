@@ -109,10 +109,10 @@ def test_order_that_cannot_be_bought_is_flagged_and_left_unfulfilled(world):
     assert kinds(world["calls"]) == [("prepare",), ("tag+", TAG_MANUAL), ("note",)]
 
 
-def test_total_over_the_cap_on_every_listing_goes_to_manual(world):
-    world["review"] = Review(1, 14500, 2990, 13990, 50000, "Los Aromos 1234", None)
+def test_a_dearer_delivery_never_blocks_a_purchase(world):
+    world["review"] = Review(1, 9000 + 25000, 25000, 9000, 50000, "Los Aromos 1234", None)
     results = run_module.run("demo")
-    assert results[0]["reason"] == "over_cap" and ("pay",) not in world["calls"]
+    assert results[0]["result"] == "purchased" and results[0]["items"] == 9000 and results[0]["shipping"] == 25000
 
 
 def test_balance_must_cover_everything_pending_before_the_first_purchase(world):

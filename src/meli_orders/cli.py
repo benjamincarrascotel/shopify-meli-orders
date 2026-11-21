@@ -136,7 +136,6 @@ def cmd_product_init(args):
                     "variants": [{"variant_id": numeric_id(v["id"]), "title": v["title"], "units_per_item": 1}
                                  for v in found[0]["variants"]["nodes"]]},
         "listings": listings,
-        "limits": {"max_unit_price": args.max_unit_price, "max_shipping": args.max_shipping},
         "approval": {"mode": "first_purchase_pending", "first_order": None, "decided_at": None},
         "research": {"researched_at": config.now(), "notes": args.notes or ""},
     }))
@@ -193,12 +192,12 @@ def cmd_status(args):
         if decided["action"] != "ignore":
             orders.append({"order": order["name"], "action": decided["action"], "reason": decided.get("reason"),
                            "product": decided["product"]["key"] if "product" in decided else None,
-                           "units": decided.get("units"), "cap": decided.get("cap")})
+                           "units": decided.get("units")})
     show({
         "store": store["slug"], "account": store["meli"]["account"], "limits": store["limits"],
         "spent_today": ledger.spent_today(args.store),
         "products": [{"key": p["key"], "status": p["status"], "approval": p["approval"]["mode"],
-                      "listings": len(p["listings"]), "limits": p["limits"]} for p in products],
+                      "listings": len(p["listings"])} for p in products],
         "orders": orders,
     })
 
@@ -289,8 +288,6 @@ def build():
     command(products, "init", cmd_product_init, store, key,
             (("--shopify-product",), {"required": True, "help": "numeric Shopify product id"}),
             (("--listing",), {"action": "append", "required": True, "help": "listing URL; repeat for fallbacks, main one first"}),
-            (("--max-unit-price",), {"type": float, "required": True}),
-            (("--max-shipping",), {"type": float, "required": True}),
             (("--notes",), {"help": "what the research found"}))
     command(products, "check", cmd_product_check, store, key,
             (("--units",), {"type": int, "default": 1}),

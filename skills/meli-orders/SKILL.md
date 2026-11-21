@@ -44,3 +44,5 @@ A failed `site validated` is a warning, not a blocker: tell the user that site h
 - More than one store in `uv run meli-orders store list` and the user did not name one: ask which.
 - The request could mean two things (configure a product or buy now): ask.
 - Anything that spends money needs figures the user has seen. Never approve a purchase on their behalf.
+- Never invent a setting. A limit, an amount or a choice the user did not give is asked, and a "no" means
+  none: the only spending limit that exists is the store's optional daily cap.

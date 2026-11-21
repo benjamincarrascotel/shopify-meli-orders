@@ -1,4 +1,6 @@
-"""One purchase run for a store: limits, approvals, and the order of steps that keeps Shopify truthful.
+"""One purchase run for a store: approvals, the balance, the optional daily cap, and the order of steps
+that keeps Shopify truthful. There is no price or shipping cap: the cost is what the listing and the
+delivery cost that day, shown to the user on the first purchase.
 
 Integrity rules, in the order the code enforces them:
 1. An order is fulfilled (and the customer emailed) only after Mercado Libre's confirmation page.
@@ -104,7 +106,7 @@ def _stopped(order, code, **details):
 def _prepare(page, store, site, order, decided, later, files, dry_run, approve):
     """Reach the review screen and decide: stop, ask the user, or 'ready' to pay. Nothing is paid here."""
     slug = store["slug"]
-    product, units, cap, name = decided["product"], decided["units"], decided["cap"], order["name"]
+    product, units, name = decided["product"], decided["units"], order["name"]
     daily = store["limits"]["daily_cap"]
     spent = ledger.spent_today(slug)
     if daily is not None and spent + estimate(product, units) > daily:
@@ -115,8 +117,6 @@ def _prepare(page, store, site, order, decided, later, files, dry_run, approve):
     for listing in product["listings"]:
         try:
             review = checkout.prepare(page, listing, units, who)
-            if review.total > cap:
-                raise ListingProblem("over_cap", total=review.total, cap=cap)
             break
         except ListingProblem as error:  # the next listing may still work
             review, problem = None, error
@@ -131,7 +131,8 @@ def _prepare(page, store, site, order, decided, later, files, dry_run, approve):
     facts = {
         "order": name, "product": product["key"], "listing": listing["url"], "seller": listing["seller"],
         "recipient": who["name"], "address": f"{review.place}, {who['city']}", "units": units,
-        "total": review.total, "shipping": review.shipping, "delivery": review.delivery,
+        "items": review.total - (review.shipping or 0), "shipping": review.shipping or 0, "total": review.total,
+        "delivery": review.delivery,
         "balance": review.balance, "balance_after": review.balance - review.total,
         "currency": store["limits"]["currency"],
     }
@@ -151,14 +152,13 @@ def _prepare(page, store, site, order, decided, later, files, dry_run, approve):
 def _pay(page, store, site, order, decided, facts, files):
     """Pay with the Mercado Pago balance and, only on confirmation, record and fulfil the order."""
     slug, domain = store["slug"], store["shopify"]["domain"]
-    product, units, cap, name = decided["product"], decided["units"], decided["cap"], order["name"]
+    product, units, name = decided["product"], decided["units"], order["name"]
     facts = {k: v for k, v in facts.items() if k != "result"}
     review = checkout.select_wallet(page, units, facts.pop("place"))
-    if review.total > cap:
-        return _manual(store, order, Stop("over_cap", total=review.total, cap=cap), False)
     if review.balance is None or review.balance < review.total:
         return _stopped(order, "insufficient_balance", balance=review.balance or 0, needed=review.total)
-    facts |= {"total": review.total, "shipping": review.shipping, "balance": review.balance,
+    facts |= {"items": review.total - (review.shipping or 0), "shipping": review.shipping or 0,
+              "total": review.total, "balance": review.balance,
               "balance_after": review.balance - review.total}
 
     shopify.add_tag(domain, order["id"], TAG_CHECK)  # from here a later run must not buy this order again

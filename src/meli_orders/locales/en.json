@@ -17,7 +17,7 @@
   "result.unconfirmed": "PAYMENT NOT CONFIRMED, check «Mis compras» before running again",
   "result.dry_run": "reached the payment screen, nothing paid",
 
-  "approval.summary": "\nAbout to buy for order {order}:\n  Product:        {product} × {units}\n  Seller:         {seller}\n  Deliver to:     {recipient} · {address}\n  Delivery:       {delivery}\n  Shipping:       {shipping} {currency}\n  Total:          {total} {currency}\n  Balance now:    {balance} {currency}\n  Balance after:  {balance_after} {currency}",
+  "approval.summary": "\nAbout to buy for order {order}:\n  Product:        {product} × {units}\n  Seller:         {seller}\n  Deliver to:     {recipient} · {address}\n  Delivery:       {delivery}\n  Price:          {items} {currency}\n  Shipping:       {shipping} {currency}\n  Total:          {total} {currency}\n  Balance now:    {balance} {currency}\n  Balance after:  {balance_after} {currency}",
   "approval.confirm": "Approve this purchase? [y/N]",
   "approval.how": "To approve: meli-orders run <store> --approve '{order}'  (exit code {code} means an approval is pending)",
   "approval.ask_mode": "From now on, for {product}: [1] buy automatically  [2] ask me before every purchase",
@@ -44,7 +44,6 @@
   "reason.checkout_not_reached": "The listing did not lead to the payment screen.",
   "reason.session_expired": "The Mercado Libre session expired. Run `meli-orders store login <store>`.",
   "reason.review_unreadable": "The total on the payment screen could not be read.",
-  "reason.over_cap": "The total {total} is over the cap {cap} for this order.",
   "reason.daily_cap": "The daily cap {cap} would be exceeded (spent today: {spent}).",
   "reason.balance_unreadable": "The Mercado Pago balance could not be read.",
   "reason.insufficient_balance": "The Mercado Pago balance ({balance}) does not cover what is pending ({needed}). Add funds and run again.",

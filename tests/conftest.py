@@ -21,7 +21,6 @@ PRODUCT = {
          "verified": {"unit_price": 9000, "shipping": 3000, "total": 12000, "checked_at": "2026-01-01", "identical_evidence": "same photos"}},
         {"url": "https://www.mercadolibre.cl/backup", "seller": "Backup Seller", "variation": None, "verified": None},
     ],
-    "limits": {"max_unit_price": 10000, "max_shipping": 4000},
     "approval": {"mode": "auto", "first_order": "#1", "decided_at": "2026-01-01"},
 }
 

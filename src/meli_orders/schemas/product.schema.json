@@ -4,7 +4,7 @@
   "description": "One Shopify product bought on Mercado Libre. File: local/stores/<slug>/products/<key>.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "key", "status", "shopify", "listings", "limits", "approval", "created_at", "updated_at"],
+  "required": ["schema_version", "key", "status", "shopify", "listings", "approval", "created_at", "updated_at"],
   "properties": {
     "schema_version": { "const": 1 },
     "key": { "description": "File name and the name used in commands.", "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
@@ -53,7 +53,7 @@
             "properties": { "name": { "type": "string" }, "value": { "type": "string" } }
           },
           "verified": {
-            "description": "What a no-payment checkout showed when the listing was approved.",
+            "description": "What a no-payment checkout showed when the listing was approved: the cost the user saw. Not a limit; shipping changes with the customer's address.",
             "type": ["object", "null"],
             "additionalProperties": false,
             "required": ["unit_price", "shipping", "total", "checked_at", "identical_evidence"],
@@ -66,16 +66,6 @@
             }
           }
         }
-      }
-    },
-    "limits": {
-      "description": "A purchase may cost at most units x max_unit_price + max_shipping.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["max_unit_price", "max_shipping"],
-      "properties": {
-        "max_unit_price": { "type": "number", "exclusiveMinimum": 0 },
-        "max_shipping": { "type": "number", "minimum": 0 }
       }
     },
     "approval": {

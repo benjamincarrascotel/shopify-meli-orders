@@ -17,7 +17,7 @@
   "result.unconfirmed": "PAGO SIN CONFIRMAR, revisa «Mis compras» antes de volver a correr",
   "result.dry_run": "llegó a la pantalla de pago, no se pagó nada",
 
-  "approval.summary": "\nA punto de comprar para el pedido {order}:\n  Producto:       {product} × {units}\n  Vendedor:       {seller}\n  Entregar a:     {recipient} · {address}\n  Entrega:        {delivery}\n  Envío:          {shipping} {currency}\n  Total:          {total} {currency}\n  Saldo actual:   {balance} {currency}\n  Saldo después:  {balance_after} {currency}",
+  "approval.summary": "\nA punto de comprar para el pedido {order}:\n  Producto:       {product} × {units}\n  Vendedor:       {seller}\n  Entregar a:     {recipient} · {address}\n  Entrega:        {delivery}\n  Precio:         {items} {currency}\n  Envío:          {shipping} {currency}\n  Total:          {total} {currency}\n  Saldo actual:   {balance} {currency}\n  Saldo después:  {balance_after} {currency}",
   "approval.confirm": "¿Apruebas esta compra? [s/N]",
   "approval.how": "Para aprobar: meli-orders run <tienda> --approve '{order}'  (el código de salida {code} indica una aprobación pendiente)",
   "approval.ask_mode": "De ahora en adelante, para {product}: [1] comprar automáticamente  [2] preguntarme antes de cada compra",
@@ -44,7 +44,6 @@
   "reason.checkout_not_reached": "La publicación no llevó a la pantalla de pago.",
   "reason.session_expired": "La sesión de Mercado Libre venció. Corre `meli-orders store login <tienda>`.",
   "reason.review_unreadable": "No se pudo leer el total en la pantalla de pago.",
-  "reason.over_cap": "El total {total} supera el tope {cap} de este pedido.",
   "reason.daily_cap": "Se superaría el tope diario {cap} (gastado hoy: {spent}).",
   "reason.balance_unreadable": "No se pudo leer el saldo de Mercado Pago.",
   "reason.insufficient_balance": "El saldo de Mercado Pago ({balance}) no cubre lo pendiente ({needed}). Carga saldo y vuelve a correr.",

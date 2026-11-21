@@ -31,7 +31,7 @@ uv run meli-orders store login mystore                           # log in to Mer
 uv run meli-orders product list mystore                          # pick what is bought on Mercado Libre
 uv run meli-orders product search mystore "cat scratcher arch"   # candidates
 uv run meli-orders product init mystore scratcher --shopify-product 123 \
-    --listing https://www.mercadolibre.cl/... --max-unit-price 11000 --max-shipping 4000
+    --listing https://www.mercadolibre.cl/...
 uv run meli-orders product check mystore scratcher --save        # payment screen, nothing paid
 uv run meli-orders run mystore                                   # the purchase run
 ```
@@ -44,7 +44,7 @@ agent that reads [`AGENTS.md`](AGENTS.md); Claude Code can install them as a plu
 
 For every open, paid, unfulfilled order whose product is configured:
 
-1. Checks the order (one configured product, known variant, complete address) and the limits.
+1. Checks the order (one configured product, known variant, complete address) and the optional daily cap.
 2. Opens the listing, checks seller and variation, sets the quantity, uses «Comprar ahora» and enters the
    customer's address. If the main listing fails a check, the next approved listing is tried.
 3. Reads the real total and the Mercado Pago balance from the payment screen.
@@ -60,8 +60,10 @@ For every open, paid, unfulfilled order whose product is configured:
   on confirmation. An order left with `mercadolibre-check` is never bought again until you look at it.
 - An order that could not be bought gets `mercadolibre-manual` and the reason in its note. Nothing else
   about it changes. Remove the tag, or use `--retry-manual`, to try again.
-- A purchase never exceeds `units × max_unit_price + max_shipping`, the optional daily cap, or the balance.
-  The balance is checked against everything pending before the first purchase of a run.
+- There is no price or shipping cap: a purchase costs what the listing and the delivery cost that day, and
+  the first purchase of a product shows you price, shipping and total before paying. A run never spends
+  past the store's optional daily cap or the balance. The balance is checked against everything pending
+  before the first purchase of a run.
 
 ### Exit codes of `run`
 
@@ -82,7 +84,7 @@ local/
 ├── settings.json                 language
 └── stores/<store>/
     ├── store.json                Shopify domain, Mercado Libre site and account, daily cap
-    ├── products/<product>.json   Shopify product and variants, listings in order, caps, approval mode
+    ├── products/<product>.json   Shopify product and variants, listings in order, approval mode
     ├── ledger.jsonl              one line per outcome: bought, manual, needs approval, unconfirmed
     ├── browser-profile/          the isolated Chrome profile with the logged-in sessions
     └── runs/<date>/              screenshots of the payment and confirmation screens

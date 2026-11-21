@@ -47,7 +47,7 @@ def test_recipient_from_order():
 
 def test_plan_buys_units_and_packs():
     assert plan(order(lines=((3, "100", "1"),)), [PRODUCT]) | {"product": None} == {
-        "action": "buy", "product": None, "units": 3, "cap": 3 * 10000 + 4000}
+        "action": "buy", "product": None, "units": 3}
     assert plan(order(lines=((2, "100", "2"),)), [PRODUCT])["units"] == 4
 
 
@@ -70,7 +70,7 @@ def test_plan_sends_doubtful_orders_to_the_user():
 def test_estimate_uses_the_verified_checkout():
     assert estimate(PRODUCT, 2) == 2 * 9000 + 3000
     never_checked = PRODUCT | {"listings": [PRODUCT["listings"][1]]}
-    assert estimate(never_checked, 2) == 2 * 10000 + 4000
+    assert estimate(never_checked, 2) == 0
 
 
 REVIEW = """Finaliza tu compra
@@ -122,7 +122,7 @@ def test_config_round_trip_and_validation(home):
     saved = config.product("demo", "scratcher")
     assert saved["schema_version"] == 1 and saved["created_at"] and saved["listings"][0]["seller"] == "Main Seller"
     with pytest.raises(config.ConfigError):
-        config.save_product("demo", PRODUCT | {"limits": {"max_unit_price": 0, "max_shipping": 0}})
+        config.save_product("demo", PRODUCT | {"limits": {"max_shipping": 4000}})  # no such thing as a cap per product
     with pytest.raises(config.ConfigError):
         config.save_settings({"language": "fr"})
     assert config.save_settings({"language": "es"})["language"] == "es"

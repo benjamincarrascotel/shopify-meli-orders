@@ -35,8 +35,8 @@ nothing and writes nothing. The output is `{store, results, exit_code}`; act on 
 ### Approval
 
 A purchase waits when it is the first of its product or the product is set to ask every time. Show the user,
-in their language: order, product and units, seller, recipient and address, delivery, shipping, total,
-balance now and balance after. Ask for a yes or no. Only on a yes:
+in their language: order, product and units, seller, recipient and address, delivery, price (`items`),
+shipping, total, balance now and balance after. Ask for a yes or no. Only on a yes:
 
 ```bash
 uv run meli-orders run <store> --approve '<order>' --json
