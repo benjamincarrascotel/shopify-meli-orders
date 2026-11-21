@@ -2,7 +2,7 @@
 
   meli-orders doctor                              what is missing, and how to fix it
   meli-orders settings language es|en             language the user is addressed in
-  meli-orders store add <store> <x.myshopify.com> authorize the store in its isolated browser
+  meli-orders store add <store> <web address>    authorize the store in its isolated browser
   meli-orders store login <store>                 log in to Mercado Libre in that browser
   meli-orders product list|search|inspect|init|check|approval ...
   meli-orders status <store>                      pending orders and what a run would do
@@ -48,7 +48,7 @@ def cmd_settings(args):
 
 
 def cmd_store_add(args):
-    domain = args.domain
+    domain = shopify.internal_domain(args.domain)
     try:
         authorized = not shopify.missing_scopes(domain)
     except shopify.ShopifyError:
@@ -276,7 +276,7 @@ def build():
 
     stores = commands.add_parser("store", help="connect a store").add_subparsers(dest="action", required=True)
     command(stores, "list", cmd_store_list)
-    command(stores, "add", cmd_store_add, store, (("domain",), {"help": "<name>.myshopify.com"}),
+    command(stores, "add", cmd_store_add, store, (("domain",), {"help": "the store's web address, or its <code>.myshopify.com"}),
             (("--site",), {"default": "MLC", "choices": sorted(SITES), "help": "Mercado Libre site (default MLC, Chile)"}))
     command(stores, "login", cmd_store_login, store)
     command(stores, "limits", cmd_store_limits, store, (("--daily-cap",), {"required": True, "help": "amount per day, or 'none'"}))

@@ -26,7 +26,7 @@ git clone https://github.com/benjamincarrascotel/shopify-meli-orders && cd shopi
 uv sync
 uv run meli-orders settings es                                   # or en: the language you are addressed in
 uv run meli-orders doctor
-uv run meli-orders store add mystore mystore.myshopify.com       # approve the access in the store's browser
+uv run meli-orders store add mystore mystore.com                 # approve the access in the store's browser
 uv run meli-orders store login mystore                           # log in to Mercado Libre in that browser
 uv run meli-orders product list mystore                          # pick what is bought on Mercado Libre
 uv run meli-orders product search mystore "cat scratcher arch"   # candidates

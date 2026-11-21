@@ -10,7 +10,7 @@ from conftest import PRODUCT, order
 from meli_orders import config, ledger, messages
 from meli_orders.meli.checkout import money, parse_review, pick_suggestion
 from meli_orders.meli.site import site
-from meli_orders.orders import OrderProblem, TAG_CHECK, TAG_MANUAL, TAG_PURCHASED, estimate, local_phone, plan, recipient, split_address
+from meli_orders.orders import OrderProblem, Stop, TAG_CHECK, TAG_MANUAL, TAG_PURCHASED, estimate, local_phone, plan, recipient, split_address
 from meli_orders.run import EXIT_APPROVAL, EXIT_ERROR, EXIT_LIMIT, EXIT_MANUAL, EXIT_OK, exit_code
 
 ROOT = Path(__file__).parents[1]
@@ -30,6 +30,14 @@ def test_phone_loses_the_country_prefix():
     assert local_phone("9 1234 5678", CL) == "912345678"
     with pytest.raises(OrderProblem):
         local_phone("123", CL)
+
+
+def test_store_domain_is_taken_as_given_or_reported_missing(monkeypatch):
+    from meli_orders import shopify
+    assert shopify.internal_domain("https://AB12-3c.myshopify.com/admin") == "ab12-3c.myshopify.com"
+    monkeypatch.setattr(shopify.urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(OSError()))
+    with pytest.raises(Stop):
+        shopify.internal_domain("shop.example")
 
 
 def test_recipient_from_order():

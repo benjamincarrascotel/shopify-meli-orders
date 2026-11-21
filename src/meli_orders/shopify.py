@@ -5,11 +5,14 @@ can run it. Orders are read and updated only through this module, never in a bro
 """
 import json
 import os
+import re
 import subprocess
 import tempfile
+import urllib.request
 from pathlib import Path
 
 from . import browser
+from .orders import Stop
 
 # Requested in one approval so a later feature never needs a second one. write_* includes read_*.
 SCOPES = [
@@ -52,6 +55,21 @@ def _done(payload):
     if payload.get("userErrors"):
         raise ShopifyError(json.dumps(payload["userErrors"], ensure_ascii=False))
     return payload
+
+
+def internal_domain(address):
+    """The store's <code>.myshopify.com, from that domain or from the address customers visit.
+
+    Every Shopify storefront publishes it at /meta.json (observed 2026-11-21); a store behind a password does not.
+    """
+    host = re.sub(r"^https?://", "", address.strip().lower()).split("/")[0]
+    if host.endswith(".myshopify.com"):
+        return host
+    try:
+        with urllib.request.urlopen(f"https://{host}/meta.json", timeout=15) as answer:
+            return json.load(answer)["myshopify_domain"]
+    except (OSError, ValueError, KeyError):
+        raise Stop("store_domain_not_found", address=address) from None
 
 
 def shop(domain):

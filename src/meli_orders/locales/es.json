@@ -53,6 +53,7 @@
   "reason.wrong_account": "El navegador tiene la sesión de {found}; esta tienda espera {expected}. Corre `meli-orders store login <tienda>`.",
   "reason.login_not_seen": "No se vio ningún inicio de sesión en Mercado Libre.",
   "reason.first_purchase_not_approved": "La primera compra de este producto debe aprobarse antes de elegir un modo.",
+  "reason.store_domain_not_found": "No se encontró una tienda de Shopify en {address}. Usa su dominio interno: en el panel de Shopify, Configuración → Dominios, el que termina en .myshopify.com. El mismo código aparece en la dirección del panel: admin.shopify.com/store/<código>.",
 
   "fix.chrome": "Instala Google Chrome: https://www.google.com/chrome/",
   "fix.uv": "Instala uv: brew install uv  (o https://docs.astral.sh/uv/)",
@@ -63,8 +64,8 @@
   "fix.language": "Elige el idioma: meli-orders settings es  (o en)",
   "fix.config": "Corrige el archivo indicado arriba; `meli-orders validate` lo comprueba.",
   "fix.site_unvalidated": "Este sitio de Mercado Libre nunca se ha corrido de punta a punta; solo Chile (MLC).",
-  "fix.shopify_auth": "Autoriza la tienda: meli-orders store add {store} <nombre>.myshopify.com",
+  "fix.shopify_auth": "Autoriza la tienda: meli-orders store add {store} <dirección web de la tienda>",
   "fix.meli_login": "Inicia sesión en Mercado Libre: meli-orders store login {store}",
   "fix.no_products": "Configura un producto: meli-orders product init {store} ...",
-  "fix.no_store": "Conecta una tienda: meli-orders store add <tienda> <nombre>.myshopify.com"
+  "fix.no_store": "Conecta una tienda: meli-orders store add <tienda> <dirección web de la tienda>"
 }

@@ -13,7 +13,10 @@ approvals below happen in that window, never in the user's everyday browser.
 
 ## Ask first
 
-1. The store's `<name>.myshopify.com` domain.
+1. The store's web address, the one its customers visit (for example `mystore.com`). `store add` finds the
+   internal `.myshopify.com` domain from it. Never build that domain from the store's name or offer a
+   guess: it is usually a random code such as `ab12cd-3e.myshopify.com`. Only if `store add` cannot find
+   it, tell the user where it is: Shopify admin → Settings → Domains, the entry ending in `.myshopify.com`.
 2. A short name for it (lowercase, digits and hyphens), used in every command.
 3. The Mercado Libre country. Only Chile (`MLC`) has been run; say so if they pick another.
 4. Whether they want a daily spending cap for this store, and how much. It is optional: it protects
