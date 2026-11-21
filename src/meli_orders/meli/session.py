@@ -22,7 +22,7 @@ def login(slug, minutes=15):
     with browser.session(slug) as page:
         page.goto(site["home"])
         deadline, name = time.time() + minutes * 60, None
-        while not name and time.time() < deadline:
+        while not name and time.time() < deadline and page.context.pages:  # no pages: the user closed the window
             time.sleep(3)
             name = next(filter(None, (account(tab, site) for tab in page.context.pages)), None)
     if not name:
