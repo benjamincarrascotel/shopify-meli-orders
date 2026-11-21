@@ -29,6 +29,11 @@ approvals below happen in that window, never in the user's everyday browser.
    for everything the tool will ever need, so it happens once.
 2. **Mercado Libre.** `uv run meli-orders store login <store>`. The user logs in to the account that will
    buy. The command saves the account name; every later run refuses to continue under another account.
+   If Mercado Libre answers «Alcanzaste el límite de intentos» (seen 2026-11-21 after several logins from
+   new browser profiles), it is blocking logins to that account for a while, for how long is not known.
+   Stop, tell the user it is Mercado Libre's block and not a fault of the setup, and repeat this step
+   later. Do not retry in a loop, and never delete `browser-profile/` to "start clean": each new profile
+   is a new device to Mercado Libre.
 3. **Payment.** Tell the user: purchases are paid only with the Mercado Pago balance of that account, so it
    must have funds before a run. A run checks the balance against everything pending and stops if it is short.
 4. **Daily cap.** `uv run meli-orders store limits <store> --daily-cap <amount>` or `--daily-cap none`.
