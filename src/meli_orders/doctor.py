@@ -20,7 +20,8 @@ def checks():
     for tool in ("uv", "git", "shopify"):
         add(tool, shutil.which(tool), shutil.which(tool), tool)
     add("macos", sys.platform == "darwin", sys.platform, "platform")
-    ignored = subprocess.run(["git", "-C", str(config.root()), "check-ignore", "-q", "local"], capture_output=True).returncode == 0
+    # Trailing slash: the folder does not exist on a fresh clone, and the rule only matches folders.
+    ignored = subprocess.run(["git", "-C", str(config.root()), "check-ignore", "-q", "local/"], capture_output=True).returncode == 0
     add("local-folder-ignored-by-git", ignored, config.local(), "local_ignored")
     language = config.settings().get("language")
     add("language", language, language, "language")
