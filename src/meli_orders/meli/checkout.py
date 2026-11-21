@@ -5,6 +5,7 @@ mercadolibre.cl on 2026-11-20. What has never run against the real site says "no
 """
 import re
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 
 from ..orders import ListingProblem, OrderProblem, Stop, norm
 
@@ -50,14 +51,30 @@ def parse_review(text):
             money(balance.group(1)) if balance else None)
 
 
+def without_symbols(text):
+    """«O'Higgins 450» -> «OHiggins 450»: Mercado Libre's address form refuses symbols in the street."""
+    return " ".join(re.sub(r"[^\w\s]", "", text).split())
+
+
+def bare(text):
+    """Lowercase, without accents or symbols: «O'Higgins 450» -> «ohiggins 450»."""
+    return without_symbols(norm(text))
+
+
 def pick_suggestion(texts, street, city):
-    """The autocomplete entry for this street in this city; None when it is missing or ambiguous."""
+    """The autocomplete entry for this street and number in this city; None when it is missing or ambiguous.
+
+    The house number must be the same. The street name may differ by a spelling slip or a symbol
+    («Ohiggins» for «O'Higgins»): the closest name wins when it is close enough and clearly ahead.
+    """
+    number = re.findall(r"\d+", street)[-1]
     in_city = [t for t in dict.fromkeys(texts)
-               if "\n" not in t and "," in t and norm(t.rsplit(",", 1)[1]) == norm(city)]
-    exact = [t for t in in_city if norm(t.split(",")[0]) == norm(street)]
-    if exact:
-        return exact[0]
-    return in_city[0] if len(in_city) == 1 else None
+               if "\n" not in t and "," in t and norm(t.rsplit(",", 1)[1]) == norm(city)
+               and re.findall(r"\d+", t.split(",")[0])[-1:] == [number]]
+    scored = sorted(((SequenceMatcher(None, bare(t.split(",")[0]), bare(street)).ratio(), t) for t in in_city), reverse=True)
+    if not scored or scored[0][0] < 0.8 or (len(scored) > 1 and scored[1][0] > scored[0][0] - 0.05):
+        return None
+    return scored[0][1]
 
 
 def selected_variations(page):
@@ -87,42 +104,87 @@ def deliver_to(page, recipient):
     page.get_by_text("Cambiar dirección").click()
     add = page.get_by_text("Agregar nueva dirección")
     add.wait_for()
-    # a run stopped after saving the address leaves it in the account: reuse it instead of piling up copies
-    saved = page.get_by_role("radio", name=re.compile(rf"{re.escape(street)}.*{re.escape(recipient['name'])}", re.I | re.S))
+    # a run stopped after saving the address leaves it in the account: reuse it instead of piling up copies.
+    # It was saved without symbols, so «O'Higgins 450» on the order is «OHiggins 450» there.
+    saved = page.get_by_role("radio", name=re.compile(
+        rf"{re.escape(without_symbols(street))}.*{re.escape(recipient['name'])}", re.I | re.S))
     if saved.count():
         saved.first.check()
         page.get_by_text("Continuar", exact=True).click()
-        place = street
+        place = without_symbols(street)
     else:
         add.click()
         box = page.get_by_role("textbox", name="Calle y número")
         box.click()
+        box.fill("")  # the form keeps the draft of an attempt that stopped before saving (observed 2026-11-21)
         box.press_sequentially(street, delay=80)
         page.wait_for_timeout(2500)
-        number = re.search(r"\d+", street).group()
+        number = re.findall(r"\d+", street)[-1]
         pick = pick_suggestion(page.get_by_text(re.compile(number)).all_inner_texts(), street, recipient["city"])
         if not pick:
             raise OrderProblem("address_not_found", street=street, city=recipient["city"])
-        page.get_by_text(pick, exact=True).first.click()
+        # the list item, not its text: clicking the text copies it without selecting the place (observed 2026-11-21)
+        page.get_by_text(pick, exact=True).first.locator("xpath=ancestor::li[1]").click()
+        # its own suggestion can be «O'Higgins 450», which the same form then refuses: «Evita incluir símbolos».
+        # Removing the symbols keeps the chosen place and its pin (observed 2026-11-21). The box takes the
+        # suggestion a moment after the click.
+        chosen = pick.split(",")[0].strip()
+        for _ in range(20):
+            if box.input_value() == chosen:
+                break
+            page.wait_for_timeout(250)
+        place = without_symbols(chosen)
+        if place != chosen:
+            box.fill(place)
+        no_number = page.get_by_role("checkbox", name="La calle no tiene número")
+        if no_number.count() and no_number.is_checked():  # left checked by a draft, it saves the number as «SN»
+            no_number.uncheck()
         page.get_by_role("textbox", name="Nombre y apellido").fill(recipient["name"])
         page.get_by_role("textbox", name="Teléfono").fill(recipient["phone"])
         page.get_by_text("Guardar", exact=True).first.click()
 
-        page.get_by_text("Revisa la dirección").wait_for()
-        place = pick.split(",")[0]
-        if norm(f"{place}, {recipient['city']}") not in norm(page.inner_text("body")):
+        # a field the form refuses shows red helper text under it (observed 2026-11-21)
+        review = page.get_by_text("Revisa la dirección")
+        refused = page.locator("#address-form .andes-ui-typography--color-negative")
+        review.or_(refused).first.wait_for()
+        if not review.is_visible():
+            raise OrderProblem("address_form_refused", message=" ".join(refused.all_inner_texts()))
+        # an edited street opens «Verifica que los datos de tu dirección sean correctos» over the map, with
+        # street and number split (observed 2026-11-21)
+        split = page.locator("form.csn-container")
+        try:
+            split.wait_for(timeout=5000)
+        except Exception:
+            split = None  # an address taken as suggested goes straight to the map
+        if split:
+            if split.locator("#streetNumber").input_value().strip() != re.findall(r"\d+", place)[-1]:
+                raise OrderProblem("map_shows_other_address")
+            split.get_by_text("Continuar", exact=True).click()
+            split.wait_for(state="hidden")
+        shown = norm(f"{place}, {recipient['city']}")
+        for _ in range(20):  # the label under the map settles after the confirmation
+            if shown in norm(page.inner_text("body")):
+                break
+            page.wait_for_timeout(250)
+        else:
             raise OrderProblem("map_shows_other_address")
         page.get_by_text("Guardar dirección", exact=True).first.click()
 
     page.get_by_text(re.compile("Cuéntanos más sobre tu dirección|Finaliza tu compra")).first.wait_for()
     if "extra-info" in page.url:
-        # the place type is mandatory to save; a company name on the order means a workplace
+        # the place type is mandatory to save; a company name on the order (not a RUT) means a workplace
         kind = "Un lugar de trabajo" if recipient["workplace"] else "Una vivienda"
         page.get_by_role("radio", name=re.compile(kind)).check()  # the input covers its label text
         if recipient["notes"]:
-            page.get_by_placeholder(re.compile("Entre calles")).fill(recipient["notes"][:255])
+            # «Las indicaciones no deben incluir caracteres como <> @ [ ] # o $», and it refused «·» too (observed 2026-11-21)
+            notes = " ".join(re.sub(r"[^\w\s.,-]", " ", recipient["notes"]).split())
+            page.get_by_placeholder(re.compile("Entre calles")).fill(notes[:255])
         page.get_by_text("Guardar", exact=True).first.click()
-        page.get_by_text("Finaliza tu compra").wait_for()
+        done = page.get_by_text("Finaliza tu compra")
+        refused = page.locator(".andes-ui-typography--color-negative")
+        done.or_(refused).first.wait_for()
+        if not done.is_visible():
+            raise OrderProblem("address_form_refused", message=" ".join(refused.all_inner_texts()))
     try:
         page.get_by_text(place).first.wait_for()
     except Exception:

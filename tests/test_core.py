@@ -45,6 +45,17 @@ def test_recipient_from_order():
                                       "city": "Ñuñoa", "notes": "Casa", "workplace": False}
 
 
+def test_a_rut_in_the_company_field_is_not_a_workplace():
+    def with_company(company):
+        o = order()
+        o["shippingAddress"]["company"] = company
+        return recipient(o, CL)["workplace"]
+    assert not with_company("11222333")
+    assert not with_company("12.345.678-K")
+    assert not with_company("9876543-2")
+    assert with_company("Constructora Andes SpA")
+
+
 def test_plan_buys_units_and_packs():
     assert plan(order(lines=((3, "100", "1"),)), [PRODUCT]) | {"product": None} == {
         "action": "buy", "product": None, "units": 3}
@@ -115,6 +126,22 @@ def test_address_suggestion_must_be_in_the_city():
     seen = ["Los Aromos 1234, Santiago, Ñuñoa", "Ernesto Los Aromos 1234, Puente Alto", "Los Aromos 1234"]
     assert pick_suggestion(seen, "los aromos 1234", "Nunoa") == seen[0]
     assert pick_suggestion(seen, "Los Aromos 1234", "Santiago") is None
+
+
+def test_extras_after_the_number_go_to_the_notes():
+    assert split_address("Ohiggins 450 Tercer Piso", "Oficina B 2") == ("Ohiggins 450", "Tercer Piso, Oficina B 2")
+    assert split_address("Los Aromos 1234, depto 502", None) == ("Los Aromos 1234", "depto 502")
+    assert split_address("Avenida 21 de Mayo 550 Of. 3", None) == ("Avenida 21 de Mayo 550", "Of. 3")
+    assert split_address("Pedro de Valdivia 88 4to piso", None) == ("Pedro de Valdivia 88", "4to piso")
+    assert split_address("Camino La Torre 456", "Casa") == ("Camino La Torre 456", "Casa")
+
+
+def test_suggestion_tolerates_symbols_and_spelling_but_not_another_number():
+    seen = ["O'Higgins 450, Rancagua", "O'Higgins 4500, Rancagua", "Ohiggins 450, Santiago, La Florida"]
+    assert pick_suggestion(seen, "Ohiggins 450", "Rancagua") == seen[0]
+    assert pick_suggestion(["Los Aromos 1234, Ñuñoa"], "Los Aromo 1234", "Ñuñoa") == "Los Aromos 1234, Ñuñoa"
+    assert pick_suggestion(["Los Aromos 1235, Ñuñoa"], "Los Aromos 1234", "Ñuñoa") is None
+    assert pick_suggestion(["Pasaje Uno 12, Ñuñoa"], "Los Aromos 12", "Ñuñoa") is None
 
 
 def test_config_round_trip_and_validation(home):

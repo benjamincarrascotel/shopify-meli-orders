@@ -30,6 +30,7 @@
   "reason.incomplete_address": "The shipping address has no name or no city.",
   "reason.address_not_found": "Mercado Libre does not recognise «{street}» in {city}.",
   "reason.map_shows_other_address": "Mercado Libre's map shows a different address from the order's.",
+  "reason.address_form_refused": "Mercado Libre's address form refused the address: {message}",
   "reason.review_shows_other_address": "The payment screen does not show the customer's address.",
   "reason.mixed_products": "The order mixes products, or has one that is not configured.",
   "reason.unknown_variant": "The order has a variant that is not in the product's configuration.",

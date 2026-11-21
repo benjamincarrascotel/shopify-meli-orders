@@ -42,6 +42,9 @@ shipping, total, balance now and balance after. Ask for a yes or no. Only on a y
 uv run meli-orders run <store> --approve '<order>' --json
 ```
 
+The order's **Company** field can be the customer's **RUT**: stores relabel it in the checkout to collect it.
+Call it RUT, not company, when showing the order. A RUT there does not make the address a workplace.
+
 The approval covers the total they saw. If the total went up, the command asks again instead of paying.
 
 When a bought result has `"ask_approval_mode": true`, it was the product's first purchase. Ask the user

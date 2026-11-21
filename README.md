@@ -47,6 +47,14 @@ For every open, paid, unfulfilled order whose product is configured:
 1. Checks the order (one configured product, known variant, complete address) and the optional daily cap.
 2. Opens the listing, checks seller and variation, sets the quantity, uses «Comprar ahora» and enters the
    customer's address. If the main listing fails a check, the next approved listing is tried.
+   The address is cleaned first: what follows the house number (floor, office, apartment) goes to the
+   delivery notes, and only street and number are typed. Mercado Libre's suggestion must be in the order's
+   commune, with the same number and a close street name (a spelling slip or «Ohiggins» for «O'Higgins»
+   passes). Symbols its own forms refuse are removed. Anything that does not match sends the order to
+   manual review with the reason.
+   Shopify's checkout has no RUT field, so a store may relabel «Empresa» (Company) as «RUT»: the order then
+   shows the customer's RUT as company. A RUT there is not sent and does not make the address a workplace;
+   any other company does.
 3. Reads the real total and the Mercado Pago balance from the payment screen.
 4. The first purchase of a product stops here: the browser closes and you get the figures to approve. After
    it you choose whether that product is bought automatically or asks every time.

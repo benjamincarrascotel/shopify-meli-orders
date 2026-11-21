@@ -30,6 +30,7 @@
   "reason.incomplete_address": "La dirección de envío no tiene nombre o ciudad.",
   "reason.address_not_found": "Mercado Libre no reconoce «{street}» en {city}.",
   "reason.map_shows_other_address": "El mapa de Mercado Libre muestra otra dirección que la del pedido.",
+  "reason.address_form_refused": "El formulario de direcciones de Mercado Libre rechazó la dirección: {message}",
   "reason.review_shows_other_address": "La pantalla de pago no muestra la dirección del cliente.",
   "reason.mixed_products": "El pedido mezcla productos o trae uno sin configurar.",
   "reason.unknown_variant": "El pedido trae una variante que no está en la configuración del producto.",

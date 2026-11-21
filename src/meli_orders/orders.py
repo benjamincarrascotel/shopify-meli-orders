@@ -32,13 +32,26 @@ def numeric_id(gid):
     return (gid or "").rsplit("/", 1)[-1]
 
 
+# what customers write after the house number: «Cuarto Piso», «piso 4», «depto 502», «Of. 3», «Casa 5», «Torre B»
+EXTRA = re.compile(r"\b(?:(?:primer|segundo|tercer|cuarto|quinto|sexto|s[eé]ptimo|octavo|noveno|d[eé]cimo|\d+\s*(?:°|º|er|ro|do|to|vo|no|mo)?)\s+piso"
+                   r"|piso|departamento|depto|dpto|dep|oficina|of|casa|block|torre|local|condominio)\b", re.I)
+
+
 def split_address(line1, line2):
-    """(street with number, delivery notes). Customers swap the two fields, so the street is the line with a number."""
+    """(street with number, delivery notes). Customers swap the two fields, so the street is the line with a number.
+
+    Mercado Libre's address search wants only street and number, so what follows the number (floor, office,
+    apartment) moves to the notes. A word like «Torre» before the number is part of the street name.
+    """
     lines = [line.strip() for line in (line1, line2) if line and line.strip()]
     street = next((line for line in lines if re.search(r"\d", line)), None)
     if not street:
         raise OrderProblem("address_without_number")
-    return street, " · ".join(line for line in lines if line is not street)
+    notes = [line for line in lines if line is not street]
+    extra = next((m for m in EXTRA.finditer(street) if re.search(r"\d+[a-z]?$", street[:m.start()].rstrip(" ,.-#"), re.I)), None)
+    if extra:
+        street, notes = street[:extra.start()].rstrip(" ,.-#"), [street[extra.start():].strip()] + notes
+    return street, ", ".join(notes)
 
 
 def local_phone(raw, site):
@@ -52,7 +65,13 @@ def local_phone(raw, site):
     return digits
 
 
+def is_rut(text):
+    """A Chilean RUT, with or without dots, dash and check digit (for example 12.345.678-K or 12345678)."""
+    return bool(re.fullmatch(r"\d{1,2}\.?\d{3}\.?\d{3}(-?[\dkK])?", (text or "").strip()))
+
+
 def recipient(order, site):
+    """Stores may relabel the checkout's Company field as RUT to collect it, so a RUT there is not a workplace."""
     ship = order.get("shippingAddress") or {}
     street, notes = split_address(ship.get("address1"), ship.get("address2"))
     if not ship.get("name") or not ship.get("city"):
@@ -63,7 +82,7 @@ def recipient(order, site):
         "street": street,
         "city": ship["city"],
         "notes": notes,
-        "workplace": bool(ship.get("company")),
+        "workplace": bool(ship.get("company")) and not is_rut(ship["company"]),
     }
 
 
