@@ -1,0 +1,9 @@
+# Store configuration, purchase ledger, screenshots and logged-in browser sessions. Never commit.
+/local/
+
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+dist/
+.DS_Store

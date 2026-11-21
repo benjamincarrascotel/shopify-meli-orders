@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Store",
+  "description": "One Shopify store and the Mercado Libre account that buys for it. File: local/stores/<slug>/store.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "slug", "name", "shopify", "meli", "payment", "limits", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "slug": { "description": "Folder name and the name used in commands.", "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "description": "Shop name as Shopify reports it.", "type": "string", "minLength": 1 },
+    "shopify": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "authorized_at"],
+      "properties": {
+        "domain": { "type": "string", "pattern": "^[a-z0-9-]+\\.myshopify\\.com$" },
+        "authorized_at": { "description": "Last time the Shopify CLI was authorized with the full scope list.", "type": ["string", "null"] }
+      }
+    },
+    "meli": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["site", "account", "logged_in_at"],
+      "properties": {
+        "site": { "description": "Mercado Libre site id. Only MLC (Chile) is validated.", "enum": ["MLC", "MLA", "MLM", "MCO"] },
+        "account": { "description": "Account name shown in the header; every run refuses another one.", "type": ["string", "null"] },
+        "logged_in_at": { "type": ["string", "null"] }
+      }
+    },
+    "payment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method"],
+      "properties": {
+        "method": { "description": "Only the Mercado Pago balance of the buying account.", "const": "account_money" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["daily_cap", "currency"],
+      "properties": {
+        "daily_cap": { "description": "Most the store may spend per day; null for no cap.", "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+      }
+    },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}

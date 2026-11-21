@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "shopify-meli-orders",
+  "description": "Skills that drive the meli-orders command: buy paid Shopify orders on Mercado Libre and fulfil them.",
+  "owner": {
+    "name": "benjamincarrascotel"
+  },
+  "plugins": [
+    {
+      "name": "shopify-meli-orders",
+      "description": "Entry skill plus setup, store-connect, product-config and purchase-run.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

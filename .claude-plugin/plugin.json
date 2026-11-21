@@ -1,0 +1,5 @@
+{
+  "name": "shopify-meli-orders",
+  "description": "Buy paid Shopify orders on Mercado Libre and fulfil them: setup, store connection, product configuration and the purchase run, behind one entry skill.",
+  "version": "0.1.0"
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Settings",
+  "description": "User-level settings shared by every store. File: local/settings.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "language", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "language": {
+      "description": "Language the user is addressed in, by commands and by agents. Asked first in setup.",
+      "enum": ["es", "en"]
+    },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}
