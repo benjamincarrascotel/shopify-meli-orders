@@ -33,6 +33,8 @@
   "reason.unconfirmed_payment": "A payment was started and its confirmation was never seen. Check «Mis compras» in Mercado Libre, then fix the order's tags by hand.",
   "reason.waiting_manual_review": "Flagged for manual review earlier. Remove the tag mercadolibre-manual, or run with --retry-manual.",
   "reason.product_paused": "The product is paused.",
+  "reason.duplicated_purchase": "Mercado Libre says this was bought moments ago (purchase {purchase}), and that purchase is not one of this tool's: check «Mis compras» before buying it again.",
+  "reason.unconfigured_product": "The order's product is not configured to be bought on Mercado Libre.",
   "reason.not_buyable": "The listing cannot be bought right now (no «Comprar ahora»).",
   "reason.seller_changed": "The listing no longer shows the seller {seller}.",
   "reason.variation_changed": "The listing no longer shows {variation}.",

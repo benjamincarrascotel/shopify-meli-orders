@@ -76,3 +76,6 @@ The command reads seller and selected variation from each listing page. Then:
 - After it they choose: `uv run meli-orders product approval <store> <key> auto` (buy without asking) or
   `each` (ask before every purchase). Until they choose, every purchase asks.
 - To stop buying a product, set `"status": "paused"` in its file.
+- If the product is deleted and created again in Shopify, its id changes and its orders stop being bought.
+  `uv run meli-orders product relink <store> <key> --shopify-product <new id>` points the configuration at
+  the new one.

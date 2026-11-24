@@ -33,6 +33,8 @@
   "reason.unconfirmed_payment": "Se inició un pago y nunca se vio su confirmación. Revisa «Mis compras» en Mercado Libre y luego corrige a mano las etiquetas del pedido.",
   "reason.waiting_manual_review": "Quedó para revisión manual antes. Quita la etiqueta mercadolibre-manual o corre con --retry-manual.",
   "reason.product_paused": "El producto está en pausa.",
+  "reason.duplicated_purchase": "Mercado Libre avisa que esto se compró hace un momento (compra {purchase}) y esa compra no la hizo esta herramienta: revisa «Mis compras» antes de comprarlo de nuevo.",
+  "reason.unconfigured_product": "El producto del pedido no está configurado para comprarse en Mercado Libre.",
   "reason.not_buyable": "La publicación no se puede comprar ahora (sin «Comprar ahora»).",
   "reason.seller_changed": "La publicación ya no muestra al vendedor {seller}.",
   "reason.variation_changed": "La publicación ya no muestra {variation}.",

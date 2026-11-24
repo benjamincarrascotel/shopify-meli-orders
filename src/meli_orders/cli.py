@@ -4,7 +4,7 @@
   meli-orders settings language es|en             language the user is addressed in
   meli-orders store add <store> <web address>    authorize the store in its isolated browser
   meli-orders store login <store>                 log in to Mercado Libre in that browser
-  meli-orders product list|search|inspect|init|check|approval ...
+  meli-orders product list|search|inspect|init|relink|check|approval ...
   meli-orders status <store>                      pending orders and what a run would do
   meli-orders run <store>                         the purchase run
 
@@ -142,6 +142,24 @@ def cmd_product_init(args):
     }))
 
 
+def cmd_product_relink(args):
+    """Point a configured product at the Shopify product that replaced it, keeping listings and approval."""
+    product = config.product(args.store, args.key)
+    found = [p for p in shopify.active_products(config.store(args.store)["shopify"]["domain"])
+             if numeric_id(p["id"]) == args.shopify_product]
+    if not found:
+        raise config.ConfigError(f"no active Shopify product {args.shopify_product}")
+    units = {v["title"]: v["units_per_item"] for v in product["shopify"]["variants"]}
+    new = found[0]["variants"]["nodes"]
+    missing = [v["title"] for v in new if v["title"] not in units]
+    if missing:  # a pack size is the user's to set, never guessed
+        raise config.ConfigError(f"variants not in {args.key}: {', '.join(missing)}; configure the product again")
+    product["shopify"] = {"product_id": args.shopify_product, "title": found[0]["title"], "handle": found[0]["handle"],
+                          "variants": [{"variant_id": numeric_id(v["id"]), "title": v["title"],
+                                        "units_per_item": units[v["title"]]} for v in new]}
+    show(config.save_product(args.store, product)["shopify"])
+
+
 def cmd_product_check(args):
     """Take every listing to the payment screen without paying, to the account's default address."""
     product = config.product(args.store, args.key)
@@ -187,10 +205,16 @@ def cmd_status(args):
     """What a run would do, without opening a browser."""
     store = config.store(args.store)
     products = config.products(args.store)
-    orders = []
+    by_handle = {p["shopify"].get("handle"): p["key"] for p in products}
+    orders, unconfigured = [], []
     for order in shopify.open_paid_orders(store["shopify"]["domain"]):
         decided = plan(order, products)
-        if decided["action"] != "ignore":
+        if decided.get("reason") == "unconfigured_product":
+            for line in order["lineItems"]["nodes"]:
+                product = line.get("product") or {}
+                unconfigured.append({"order": order["name"], "product_id": numeric_id(product.get("id")),
+                                     "title": line["title"], "same_handle_as": by_handle.get(product.get("handle"))})
+        elif decided["action"] != "ignore":
             orders.append({"order": order["name"], "action": decided["action"], "reason": decided.get("reason"),
                            "product": decided["product"]["key"] if "product" in decided else None,
                            "units": decided.get("units")})
@@ -200,6 +224,7 @@ def cmd_status(args):
         "products": [{"key": p["key"], "status": p["status"], "approval": p["approval"]["mode"],
                       "listings": len(p["listings"])} for p in products],
         "orders": orders,
+        "unconfigured": unconfigured,
     })
 
 
@@ -290,6 +315,8 @@ def build():
             (("--shopify-product",), {"required": True, "help": "numeric Shopify product id"}),
             (("--listing",), {"action": "append", "required": True, "help": "listing URL; repeat for fallbacks, main one first"}),
             (("--notes",), {"help": "what the research found"}))
+    command(products, "relink", cmd_product_relink, store, key,
+            (("--shopify-product",), {"required": True, "help": "numeric id of the Shopify product that replaced it"}))
     command(products, "check", cmd_product_check, store, key,
             (("--units",), {"type": int, "default": 1}),
             (("--save",), {"action": "store_true", "help": "record what was measured in the product file"}),

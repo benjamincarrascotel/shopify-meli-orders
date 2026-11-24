@@ -15,6 +15,19 @@ description: >-
 would do with it, the products and their approval mode, the daily cap and what was spent today. If there
 is more than one store and the user named none, ask which.
 
+**Read `unconfigured` before saying there is nothing to buy.** It lists paid, open, unfulfilled orders whose
+product is not configured, which the run leaves alone. A user asking for the day's purchases expects those
+orders too, so never answer "nothing pending" while it is not empty. For each one:
+
+- `same_handle_as` names a configured product, or the title matches one: the product was most likely
+  recreated in Shopify and has a new id. Tell the user, and on their yes run
+  `uv run meli-orders product relink <store> <key> --shopify-product <product_id>`. It keeps the listings,
+  pack sizes and approval mode, and refuses when a variant is new (its pack size is the user's to set).
+  Then run `status` again.
+- Otherwise it is a product that was never configured: tell the user and offer
+  [product-config](../product-config/SKILL.md). Some products are not meant to be bought on Mercado Libre;
+  the user decides.
+
 ## Run
 
 ```bash

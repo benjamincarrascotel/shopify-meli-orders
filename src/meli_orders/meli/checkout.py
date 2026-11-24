@@ -213,11 +213,29 @@ def read_review(page, units, place):
     return Review(units, total, shipping, product_amount, balance, place, delivery)
 
 
-def prepare(page, listing, units, recipient=None):
+def duplicate_of(url):
+    """The earlier purchase named by «Hiciste una compra igual hace un momento», or None on any other page."""
+    found = re.search(r"/checkout/duplicated_purchase\?(?:.*&)?purchase_id=(\d+)", url)
+    return found.group(1) if found else None
+
+
+def purchase_id_of(url):
+    """Purchase number in the confirmation page's address, or None."""
+    found = re.search(r"/congrats\?(?:.*&)?purchaseId=(\d+)", url)
+    return found.group(1) if found else None
+
+
+def prepare(page, listing, units, recipient=None, ours=frozenset()):
     """Reach the review screen for `units` of `listing`.
 
     With a recipient the purchase is addressed to them; without one it keeps the account's default
     address, which is how a listing is measured without touching any customer data.
+
+    When the same listing was bought minutes before, «Comprar ahora» leads to
+    /gz/checkout/duplicated_purchase?purchase_id=<earlier> instead of the checkout (seen 2026-11-24, two
+    orders of one product in one run). It continues only when that earlier purchase is in `ours`, the
+    purchases this tool recorded for other orders; any other earlier purchase could be this very order
+    bought by hand, so it stops. The «Continuar compra» click is not exercised against the real site.
     """
     page.goto(listing["url"], wait_until="domcontentloaded")
     buy = page.get_by_role("button", name="Comprar ahora").first
@@ -235,10 +253,21 @@ def prepare(page, listing, units, recipient=None):
         choose_quantity(page, units)
     # «Comprar ahora» and not the cart: the cart may hold other products of the account
     buy.click()
+    review = page.get_by_text("Finaliza tu compra")
+    again = page.get_by_text("Continuar compra", exact=True)
     try:
-        page.get_by_text("Finaliza tu compra").wait_for()
+        review.or_(again).first.wait_for()
     except Exception:
         raise Stop("session_expired") if "login" in page.url else ListingProblem("checkout_not_reached")
+    earlier = duplicate_of(page.url)
+    if earlier:
+        if earlier not in ours:
+            raise Stop("duplicated_purchase", purchase=earlier)  # not a listing problem: a fallback would buy it again
+        again.click()
+        try:
+            review.wait_for()
+        except Exception:
+            raise ListingProblem("checkout_not_reached")
     place = deliver_to(page, recipient) if recipient else None
     page.wait_for_timeout(3000)  # the delivery block reloads after an address change and the total with it
     prefer_free_delivery(page)

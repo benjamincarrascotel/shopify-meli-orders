@@ -113,10 +113,12 @@ def _prepare(page, store, site, order, decided, later, files, dry_run, approve):
         return _stopped(order, "daily_cap", cap=daily, spent=spent)
     who = recipient(order, site)
 
+    # purchases this tool made for other orders: the only ones a «compra igual» warning may point at
+    ours = {e["purchase_id"] for e in ledger.entries(slug) if e["result"] == "purchased" and e.get("purchase_id")}
     review = problem = None
     for listing in product["listings"]:
         try:
-            review = checkout.prepare(page, listing, units, who)
+            review = checkout.prepare(page, listing, units, who, ours)
             break
         except ListingProblem as error:  # the next listing may still work
             review, problem = None, error
@@ -168,7 +170,8 @@ def _pay(page, store, site, order, decided, facts, files):
         ledger.append(slug, result="unconfirmed", **facts)
         return {**facts, "result": "unconfirmed", "text": t("reason.unconfirmed_payment")}
     _snapshot(page, files, "paid", html=False)
-    facts["purchase_id"] = checkout.latest_purchase_id(page, site)
+    # the list in «Mis compras» can lag and show an older purchase first (seen 2026-11-24)
+    facts["purchase_id"] = checkout.purchase_id_of(page.url) or checkout.latest_purchase_id(page, site)
 
     try:
         shopify.add_tag(domain, order["id"], TAG_PURCHASED)

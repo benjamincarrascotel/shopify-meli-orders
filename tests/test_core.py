@@ -8,7 +8,7 @@ import pytest
 
 from conftest import PRODUCT, order
 from meli_orders import config, ledger, messages
-from meli_orders.meli.checkout import money, parse_review, pick_suggestion
+from meli_orders.meli.checkout import duplicate_of, money, parse_review, pick_suggestion, purchase_id_of
 from meli_orders.meli.site import site
 from meli_orders.orders import OrderProblem, Stop, TAG_CHECK, TAG_MANUAL, TAG_PURCHASED, estimate, local_phone, plan, recipient, split_address
 from meli_orders.run import EXIT_APPROVAL, EXIT_ERROR, EXIT_LIMIT, EXIT_MANUAL, EXIT_OK, exit_code
@@ -56,6 +56,15 @@ def test_a_rut_in_the_company_field_is_not_a_workplace():
     assert with_company("Constructora Andes SpA")
 
 
+def test_purchase_numbers_are_read_from_the_address():
+    # addresses as Mercado Libre showed them on 2026-11-24
+    base = "https://www.mercadolibre.cl"
+    assert duplicate_of(f"{base}/gz/checkout/duplicated_purchase?session_id=abc&purchase_id=2000000000000001&channel=marketplace") == "2000000000000001"
+    assert duplicate_of(f"{base}/checkout/review/onestep?session_id=abc&channel=marketplace") is None
+    assert purchase_id_of(f"{base}/checkout/finisher/congrats?session_id=abc&purchaseId=2000000000000002") == "2000000000000002"
+    assert purchase_id_of(f"{base}/checkout/finisher?session_id=abc&loading_mode=none") is None
+
+
 def test_plan_buys_units_and_packs():
     assert plan(order(lines=((3, "100", "1"),)), [PRODUCT]) | {"product": None} == {
         "action": "buy", "product": None, "units": 3}
@@ -63,7 +72,7 @@ def test_plan_buys_units_and_packs():
 
 
 def test_plan_leaves_other_orders_alone():
-    assert plan(order(lines=((1, "999", "9"),)), [PRODUCT]) == {"action": "ignore"}
+    assert plan(order(lines=((1, "999", "9"),)), [PRODUCT]) == {"action": "ignore", "reason": "unconfigured_product"}
     assert plan(order(test=True), [PRODUCT]) == {"action": "ignore"}
     assert plan(order(tags=[TAG_PURCHASED]), [PRODUCT]) == {"action": "ignore"}
     assert plan(order(refunds=[{"id": "r"}]), [PRODUCT]) == {"action": "ignore"}

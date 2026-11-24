@@ -101,7 +101,8 @@ def plan(order, products, retry_manual=False):
     lines = order["lineItems"]["nodes"]
     ours = [line for line in lines if numeric_id((line.get("product") or {}).get("id")) in by_id]
     if not ours:
-        return {"action": "ignore"}  # the store also sells things that are not bought on Mercado Libre
+        # the store also sells things that are not bought on Mercado Libre; status reports them so a recreated product is noticed
+        return {"action": "ignore", "reason": "unconfigured_product"}
     if TAG_CHECK in tags:
         return {"action": "skip", "reason": "unconfirmed_payment"}
     if TAG_MANUAL in tags and not retry_manual:

@@ -11,6 +11,8 @@ from meli_orders.orders import ListingProblem, OrderProblem, TAG_CHECK, TAG_MANU
 
 
 class Page:
+    url = ""
+
     def screenshot(self, **_):
         pass
 
@@ -29,8 +31,9 @@ def world(home, monkeypatch):
     def fake_session(slug):
         yield Page()
 
-    def prepare(page, listing, units, who):
+    def prepare(page, listing, units, who, ours):
         calls.append(("prepare", listing["seller"]))
+        state["ours"] = ours
         error = state["prepare_error"]
         if error and (not isinstance(error, dict) or listing["seller"] in error):
             raise error[listing["seller"]] if isinstance(error, dict) else error
@@ -61,6 +64,13 @@ def test_auto_purchase_tags_before_paying_and_fulfils_after_confirmation(world):
     assert kinds(world["calls"]) == [("prepare",), ("tag+", TAG_CHECK), ("pay",), ("tag+", TAG_PURCHASED),
                                      ("tag-", TAG_CHECK), ("note",), ("fulfill",)]
     assert ledger.spent_today("demo") == 11980
+
+
+def test_a_compra_igual_warning_may_only_point_at_purchases_of_this_tool(world):
+    ledger.append("demo", order="#1", result="purchased", total=1, purchase_id="111")
+    ledger.append("demo", order="#2", result="unconfirmed", total=1)
+    run_module.run("demo")
+    assert world["ours"] == {"111"}
 
 
 def test_unconfirmed_payment_never_fulfils_and_never_says_not_bought(world):

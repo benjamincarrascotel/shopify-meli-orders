@@ -25,7 +25,7 @@ SCOPES = [
 
 ORDERS = """query($q: String!) { orders(first: 100, query: $q, sortKey: CREATED_AT) { nodes {
   id name note tags test cancelledAt phone refunds { id }
-  lineItems(first: 20) { nodes { quantity title product { id } variant { id } } }
+  lineItems(first: 20) { nodes { quantity title product { id handle } variant { id } } }
   shippingAddress { name company address1 address2 city phone } } } }"""
 
 PRODUCTS = """{ products(first: 100, query: "status:active") { nodes {
