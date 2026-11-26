@@ -185,9 +185,13 @@ def deliver_to(page, recipient):
         done.or_(refused).first.wait_for()
         if not done.is_visible():
             raise OrderProblem("address_form_refused", message=" ".join(refused.all_inner_texts()))
-    try:
-        page.get_by_text(place).first.wait_for()
-    except Exception:
+    # the review drops accents and «ñ»: «Ñuñoa 100» shows as «Nunoa 100» (observed 2026-11-26)
+    page.get_by_text("Finaliza tu compra").first.wait_for()
+    for _ in range(20):
+        if norm(place) in norm(page.inner_text("body")):
+            break
+        page.wait_for_timeout(250)
+    else:
         raise OrderProblem("review_shows_other_address")
     return place
 
