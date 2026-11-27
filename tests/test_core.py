@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from conftest import PRODUCT, order
-from meli_orders import config, ledger, messages
+from meli_orders import config, geocode, ledger, messages
 from meli_orders.meli.checkout import duplicate_of, money, parse_review, pick_suggestion, purchase_id_of
 from meli_orders.meli.site import site
 from meli_orders.orders import OrderProblem, Stop, TAG_CHECK, TAG_MANUAL, TAG_PURCHASED, estimate, local_phone, plan, recipient, split_address
@@ -210,3 +210,12 @@ def test_schemas_are_valid_json_schema():
 def test_nothing_under_local_is_tracked_by_git():
     tracked = subprocess.run(["git", "-C", str(ROOT), "ls-files", "local"], capture_output=True, text=True).stdout
     assert tracked.strip() == ""
+
+
+def test_openstreetmap_corrects_the_street_only_with_the_same_number_in_the_same_commune():
+    who = {"street": "Los Aromos 1234 villa los pinos", "city": "Ñuñoa", "notes": "Casa"}
+    found = {"house_number": "1234", "road": "Los Aromos", "neighbourhood": "Villa Los Pinos", "suburb": "Ñuñoa", "city": "Santiago"}
+    assert geocode.corrected(who, found) == {"street": "Los Aromos 1234", "city": "Ñuñoa", "notes": "villa los pinos, Casa"}
+    assert geocode.corrected(who, {**found, "house_number": "1235"}) == who
+    assert geocode.corrected(who, {**found, "suburb": "Macul"}) == who
+    assert geocode.corrected(who, None) == who

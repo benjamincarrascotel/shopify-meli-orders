@@ -95,7 +95,10 @@ For every open, paid, unfulfilled order whose product is configured:
 2. Opens the listing, checks seller and variation, sets the quantity, uses «Comprar ahora» and enters the
    customer's address. If the main listing fails a check, the next approved listing is tried.
    The address is cleaned first: what follows the house number (floor, office, apartment) goes to the
-   delivery notes, and only street and number are typed. Mercado Libre's suggestion must be in the order's
+   delivery notes, and only street and number are typed. The street and commune are looked up in
+   OpenStreetMap (Nominatim, free, no key): when it has the same number in the same commune, its street name
+   is typed and anything the customer wrote after the number («villa los pinos») goes to the notes; with no
+   answer the address is typed as written. This sends each order's street and commune to OpenStreetMap. Mercado Libre's suggestion must be in the order's
    commune, with the same number and a close street name (a spelling slip or «Ohiggins» for «O'Higgins»
    passes). Symbols its own forms refuse are removed. Anything that does not match sends the order to
    manual review with the reason.

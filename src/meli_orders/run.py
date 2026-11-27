@@ -11,7 +11,7 @@ Integrity rules, in the order the code enforces them:
 """
 from datetime import datetime
 
-from . import browser, config, ledger, shopify
+from . import browser, config, geocode, ledger, shopify
 from .meli import checkout, session
 from .meli.site import site as site_of
 from .messages import t
@@ -111,7 +111,7 @@ def _prepare(page, store, site, order, decided, later, files, dry_run, approve):
     spent = ledger.spent_today(slug)
     if daily is not None and spent + estimate(product, units) > daily:
         return _stopped(order, "daily_cap", cap=daily, spent=spent)
-    who = recipient(order, site)
+    who = geocode.check(recipient(order, site), site)
 
     # purchases this tool made for other orders: the only ones a «compra igual» warning may point at
     ours = {e["purchase_id"] for e in ledger.entries(slug) if e["result"] == "purchased" and e.get("purchase_id")}

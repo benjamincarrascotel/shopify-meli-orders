@@ -79,5 +79,12 @@ addresses or phones into files.
 
 ## Manual-review orders
 
-They are skipped by later runs. After the user fixed the cause (for example the address in Shopify), run
+They are skipped by later runs.
+
+The run already checks each street with OpenStreetMap before typing it. An order that is still
+`address_not_found` has an address OpenStreetMap did not confirm: look it up on a map, show the user what
+the map gives (street, number, commune), and only on their yes change the address in Shopify, putting the
+neighbourhood or house details in the second line. Then retry that order.
+
+ After the user fixed the cause (for example the address in Shopify), run
 `uv run meli-orders run <store> --retry-manual --json`.

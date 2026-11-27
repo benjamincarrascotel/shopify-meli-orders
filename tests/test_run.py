@@ -4,7 +4,7 @@ from contextlib import contextmanager
 import pytest
 
 from conftest import PRODUCT, order
-from meli_orders import browser, config, ledger, run as run_module, shopify
+from meli_orders import browser, config, geocode, ledger, run as run_module, shopify
 from meli_orders.meli import checkout, session
 from meli_orders.meli.checkout import Review
 from meli_orders.orders import ListingProblem, OrderProblem, TAG_CHECK, TAG_MANUAL, TAG_PURCHASED
@@ -40,6 +40,7 @@ def world(home, monkeypatch):
         return state["review"]
 
     monkeypatch.setattr(browser, "session", fake_session)
+    monkeypatch.setattr(geocode, "lookup", lambda *a: None)  # offline
     monkeypatch.setattr(session, "ensure", lambda *a: None)
     monkeypatch.setattr(checkout, "prepare", prepare)
     monkeypatch.setattr(checkout, "select_wallet", lambda *a: state["review"])
